@@ -1,10 +1,11 @@
 import React, { useState } from "react";
+import "bootstrap/dist/css/bootstrap.min.css";
 
 function TodoApp() {
   const [tasks, setTasks] = useState([]);
   const [input, setInput] = useState("");
 
-  const handleKeyPress = (e) => {
+  const handleKeyDown = (e) => {
     if (e.key === "Enter" && input.trim() !== "") {
       setTasks([...tasks, input.trim()]);
       setInput("");
@@ -18,24 +19,24 @@ function TodoApp() {
   };
 
   return (
-    <div style={styles.container}>
-      <h1 style={styles.title}>Todos :D</h1>
+    <div className="container my-5 p-4 shadow-lg rounded bg-white">
+      <h1 className="text-center text-dark">Todos :D</h1>
       <input
-        style={styles.input}
+        className="form-control mt-3"
         type="text"
         placeholder="What needs to be done?"
         value={input}
         onChange={(e) => setInput(e.target.value)}
-        onKeyPress={handleKeyPress}
+        onKeyDown={handleKeyDown}
       />
       {tasks.length === 0 ? (
-        <p style={styles.empty}>No hay tareas, añadir tareas</p>
+        <p className="text-center text-muted mt-4">No hay tareas, añadir tareas</p>
       ) : (
-        <ul style={styles.ul}>
+        <ul className="list-unstyled mt-4">
           {tasks.map((task, index) => (
             <li
               key={index}
-              style={styles.li}
+              className="position-relative p-3 mb-2 bg-light rounded"
               onMouseEnter={(e) =>
                 (e.currentTarget.querySelector("button").style.display = "inline")
               }
@@ -45,7 +46,8 @@ function TodoApp() {
             >
               {task}
               <button
-                style={{ ...styles.deleteBtn, display: "none" }}
+                className="position-absolute top-50 end-0 translate-middle-y btn btn-link text-danger"
+                style={{ display: "none" }}
                 onClick={() => deleteTask(index)}
               >
                 🗑️
@@ -54,63 +56,11 @@ function TodoApp() {
           ))}
         </ul>
       )}
+      <div className="mt-4 d-flex justify-content-between">
+        <h5 className="text-muted">Total tasks: {tasks.length}</h5>
+      </div>
     </div>
   );
 }
-
-const styles = {
-  container: {
-    background: "#fff",
-    padding: "30px",
-    borderRadius: "10px",
-    width: "100%",
-    maxWidth: "400px",
-    margin: "50px auto",
-    boxShadow: "0 5px 15px rgba(0,0,0,0.1)",
-    fontFamily: "sans-serif",
-  },
-  title: {
-    textAlign: "center",
-    color: "#333",
-  },
-  input: {
-    width: "100%",
-    padding: "12px",
-    fontSize: "16px",
-    borderRadius: "5px",
-    border: "1px solid #ccc",
-    outline: "none",
-    marginTop: "10px",
-  },
-  ul: {
-    listStyle: "none",
-    padding: 0,
-    marginTop: "20px",
-  },
-  li: {
-    position: "relative",
-    padding: "12px",
-    marginBottom: "10px",
-    background: "#eee",
-    borderRadius: "5px",
-    transition: "background 0.3s",
-  },
-  deleteBtn: {
-    position: "absolute",
-    right: "10px",
-    top: "50%",
-    transform: "translateY(-50%)",
-    background: "transparent",
-    border: "none",
-    color: "#888",
-    fontSize: "16px",
-    cursor: "pointer",
-  },
-  empty: {
-    color: "#999",
-    textAlign: "center",
-    marginTop: "20px",
-  },
-};
 
 export default TodoApp;
