@@ -1,21 +1,76 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import "bootstrap/dist/css/bootstrap.min.css";
+
+const USER = "danieladev";
 
 function TodoApp() {
   const [tasks, setTasks] = useState([]);
   const [input, setInput] = useState("");
 
-  const handleKeyDown = (e) => {
-    if (e.key === "Enter" && input.trim() !== "") {
-      setTasks([...tasks, input.trim()]);
-      setInput("");
-    }
+  useEffect(() => {
+    fetchTasks();
+  }, []);
+
+  const fetchTasks = () => {
+    fetch(`https://playground.4geeks.com/todo/todos/user/${USER}`)
+      .then((res) => res.json())
+      .then((data) => {
+        if (data.todos) {
+          setTasks(data.todos);
+        }
+      })
+      .catch((error) => console.error("Error al obtener las tareas:", error));
   };
 
-  const deleteTask = (index) => {
-    const newTasks = [...tasks];
-    newTasks.splice(index, 1);
-    setTasks(newTasks);
+  const addTask = () => {
+    if (input.trim() === "") return;
+
+    const newTask = {
+      label: input.trim(),
+      is_done: false,
+    };
+
+    setTasks([...tasks, newTask]);
+    setInput("");
+
+    fetch(`https://playground.4geeks.com/todo/todos/${USER}`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify(newTask),
+    })
+      .then((response) => response.json())
+      .then(() => {
+        fetchTasks();
+      })
+      .catch((error) => console.error("Error al agregar la tarea:", error));
+  };
+
+  const deleteTask = (taskId) => {
+    fetch(`https://playground.4geeks.com/todo/todos/${USER}/${taskId}`, {
+      method: "DELETE",
+    })
+      .then(() => {
+        setTasks(tasks.filter((task) => task.id !== taskId));
+      })
+      .catch((error) => console.error("Error al eliminar la tarea:", error));
+  };
+
+  const clearAllTasks = () => {
+    fetch(`https://playground.4geeks.com/todo/todos/user/${USER}`, {
+      method: "DELETE",
+    })
+      .then(() => {
+        setTasks([]);
+      })
+      .catch((error) => console.error("Error al limpiar las tareas:", error));
+  };
+
+  const handleKeyDown = (e) => {
+    if (e.key === "Enter" && input.trim() !== "") {
+      addTask();
+    }
   };
 
   return (
@@ -33,9 +88,9 @@ function TodoApp() {
         <p className="text-center text-muted mt-4">No hay tareas, añadir tareas</p>
       ) : (
         <ul className="list-unstyled mt-4">
-          {tasks.map((task, index) => (
+          {tasks.map((task) => (
             <li
-              key={index}
+              key={task.id}
               className="position-relative p-3 mb-2 bg-light rounded"
               onMouseEnter={(e) =>
                 (e.currentTarget.querySelector("button").style.display = "inline")
@@ -44,11 +99,11 @@ function TodoApp() {
                 (e.currentTarget.querySelector("button").style.display = "none")
               }
             >
-              {task}
+              {task.label}
               <button
                 className="position-absolute top-50 end-0 translate-middle-y btn btn-link text-danger"
                 style={{ display: "none" }}
-                onClick={() => deleteTask(index)}
+                onClick={() => deleteTask(task.id)}
               >
                 🗑️
               </button>
@@ -58,6 +113,12 @@ function TodoApp() {
       )}
       <div className="mt-4 d-flex justify-content-between">
         <h5 className="text-muted">Total tasks: {tasks.length}</h5>
+        <button
+          className="btn btn-danger"
+          onClick={clearAllTasks}
+        >
+          Limpiar todas
+        </button>
       </div>
     </div>
   );
