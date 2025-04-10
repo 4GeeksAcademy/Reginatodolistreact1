@@ -1,15 +1,44 @@
 import React, { useState, useEffect } from "react";
 import "bootstrap/dist/css/bootstrap.min.css";
 
-const USER = "daniela";
+const USER = "alesanchezr";
 
 function TodoApp() {
   const [tasks, setTasks] = useState([]);
   const [input, setInput] = useState("");
 
   useEffect(() => {
-    fetchTasks();
+    checkAndFetchTasks();
   }, []);
+
+  const checkAndFetchTasks = () => {
+    fetch(`https://playground.4geeks.com/todo/todos/user/${USER}`)
+      .then((res) => res.json())
+      .then((data) => {
+        if (data.todos) {
+          setTasks(data.todos);
+        } else {
+          createUser();
+        }
+      })
+      .catch(() => {
+        createUser();
+      });
+  };
+
+  const createUser = () => {
+    fetch(`https://playground.4geeks.com/todo/todos/${USER}`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({ label: "Initial Task", is_done: false }),
+    })
+      .then(() => {
+        fetchTasks();
+      })
+      .catch((error) => console.error("Error al crear el usuario:", error));
+  };
 
   const fetchTasks = () => {
     fetch(`https://playground.4geeks.com/todo/todos/user/${USER}`)
@@ -30,21 +59,22 @@ function TodoApp() {
       is_done: false,
     };
 
-    setTasks([...tasks, newTask]);
-    setInput("");
-
     fetch(`https://playground.4geeks.com/todo/todos/${USER}`, {
       method: "POST",
+      body: JSON.stringify(newTask),
       headers: {
         "Content-Type": "application/json",
       },
-      body: JSON.stringify(newTask),
     })
-      .then((response) => response.json())
       .then(() => {
         fetchTasks();
       })
-      .catch((error) => console.error("Error al agregar la tarea:", error));
+      .catch((error) => {
+        console.log(error);
+      });
+
+    setTasks([...tasks, newTask]);
+    setInput("");
   };
 
   const deleteTask = (taskId) => {
@@ -52,7 +82,7 @@ function TodoApp() {
       method: "DELETE",
     })
       .then(() => {
-        setTasks(tasks.filter((task) => task.id !== taskId));
+        setTasks((prevTasks) => prevTasks.filter((task) => task.id !== taskId));
       })
       .catch((error) => console.error("Error al eliminar la tarea:", error));
   };
@@ -101,11 +131,11 @@ function TodoApp() {
             >
               {task.label}
               <button
-                className="position-absolute top-50 end-0 translate-middle-y btn btn-link text-danger"
+                className="position-absolute top-50 end-0 translate-middle-y btn btn-danger"
                 style={{ display: "none" }}
                 onClick={() => deleteTask(task.id)}
               >
-                🗑️
+                Eliminar
               </button>
             </li>
           ))}
